@@ -6,15 +6,35 @@ Flask + SQLite backend, one static HTML/JS page, no build step.
 
 ## Run
 
+## Run
+
+### 1. Clone the Repository
+```bash
+git clone [https://github.com/avi-p1/restaurant-ordering-ex.git](https://github.com/avi-p1/restaurant-ordering-ex.git)
+cd restaurant-ordering-ex
+```
+
+### 2. Set Up & Start
+
+#### macOS / Linux
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python app.py            # http://localhost:5000
+python app.py
 ```
 
-- Customers: open `/`. Staff: click **Kitchen** (token defaults to `staff`).
-- Config via env vars: `STAFF_TOKEN` (default `staff`), `DB_PATH` (default `restaurant.db`), `PORT` (default `5000`).
-- The database is created and seeded with a sample menu on first start. Delete `restaurant.db` to reset.
+#### Windows (PowerShell)
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python app.py
+```
+
+* Customers: open `/` (defaults to `http://localhost:5000`)
+* Staff: click **Kitchen** (token defaults to `staff`)
+* Config via env vars: `STAFF_TOKEN` (default `staff`), `DB_PATH` (default `restaurant.db`), `PORT` (default `5000`)
+* The database is created and seeded with a sample menu on first start. Delete `restaurant.db` to reset.
 
 ## Tests
 
