@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casa Basilico</title>
+<style>
+:root{--ink:#17231d;--chalk:#eef2ec;--board:#1f2e27;--paper:#f2f5f1;--card:#fff;--line:#d3dad1;--tomato:#c2412d;--tomato-d:#9f3322;--basil:#2f6b4f;--muted:#5a685f;--serif:Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 var(--sans);color:var(--ink);background:var(--paper)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--basil);outline-offset:2px}
+header.top{background:var(--board);color:var(--chalk);padding:20px clamp(16px,4vw,48px);display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;border-bottom:6px solid var(--basil)}
+header.top h1{margin:0;font:400 clamp(2rem,5vw,3.2rem)/1 var(--serif);letter-spacing:.01em}
+header.top p{margin:4px 0 0;color:#b8c6bb}
+nav button{background:none;border:0;color:#b8c6bb;padding:8px 14px;border-bottom:3px solid transparent}
+nav button[aria-pressed=true]{color:#fff;border-color:var(--tomato)}
+main{padding:24px clamp(16px,4vw,48px);max-width:1200px;margin:0 auto}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:32px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+h2{font:400 1.6rem/1.2 var(--serif);margin:28px 0 8px}
+#menu h2:first-child{margin-top:0}
+.item{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px dashed var(--line)}
+.item h3{margin:0;font-size:1.05rem}.item p{margin:2px 0 0;color:var(--muted);max-width:52ch}
+.buy{display:flex;flex-direction:column;align-items:flex-end;gap:6px}.price{font-variant-numeric:tabular-nums;font-weight:600}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+.step button{width:34px;height:34px;border:0;background:none;font-size:1.2rem}
+.step output{min-width:28px;text-align:center;font-variant-numeric:tabular-nums}
+aside{display:grid;gap:20px;position:sticky;top:12px}
+@media(max-width:860px){aside{position:static}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+.panel h2{margin:0 0 8px;font-size:1.3rem}
+.line{display:flex;justify-content:space-between;padding:4px 0}
+.empty{color:var(--muted)}
+input[type=text]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;margin:8px 0}
+.primary{width:100%;background:var(--tomato);color:#fff;border:0;border-radius:6px;padding:11px;font-weight:600}
+.primary:hover{background:var(--tomato-d)}.primary:disabled{background:#b9b9b9;cursor:not-allowed}
+.sum{display:grid;grid-template-columns:1fr auto;margin:8px 0 0;gap:2px 0}.sum dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}.sum .tot{font-weight:700}
+#log{height:190px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.msg{padding:7px 10px;border-radius:8px;max-width:88%;background:var(--paper)}.msg.me{align-self:flex-end;background:var(--basil);color:#fff}
+#chatform{display:flex;gap:6px}#chatform input{margin:0}#chatform button{border:0;background:var(--board);color:#fff;border-radius:6px;padding:0 14px}
+.track{list-style:none;display:flex;padding:0;margin:8px 0}
+.track li{flex:1;text-align:center;font-size:.85rem;padding-top:10px;border-top:4px solid var(--line);color:var(--muted)}
+.track li.done{border-color:var(--basil)}.track li.now{border-color:var(--tomato);color:var(--ink);font-weight:700}
+.cancelled{color:var(--tomato-d);font-weight:600}
+#board{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:16px;overflow-x:auto;padding-bottom:8px}
+.col h2{font-size:1.2rem;margin:0 0 10px;text-transform:capitalize}.col h2 span{color:var(--muted);font-size:.9rem}
+.ticket{background:var(--card);border:1px solid var(--line);border-top:8px dotted var(--board);padding:10px 12px;margin-bottom:12px}
+.ticket header{display:flex;justify-content:space-between;gap:8px}.ticket time{color:var(--muted)}
+.ticket ul{margin:6px 0;padding-left:18px}.ticket footer{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ticket footer span{margin-right:auto;font-weight:600}
+.go{background:var(--basil);color:#fff;border:0;border-radius:6px;padding:7px 10px}.ghost{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+.row{display:flex;gap:12px;align-items:center;margin-bottom:16px}.row input{max-width:200px;margin:0}
+#err{color:var(--tomato-d)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--board);color:#fff;padding:10px 16px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}#toast.bad{background:var(--tomato-d)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div><h1>Casa Basilico</h1><p>Wood-fired pizza and fresh pasta</p></div>
+  <nav><button data-tab="order" aria-pressed="true">Order</button><button data-tab="kitchen" aria-pressed="false">Kitchen</button></nav>
+</header>
+<main id="order">
+  <div class="grid">
+    <section id="menu" aria-label="Menu"></section>
+    <aside>
+      <div class="panel">
+        <h2>Your order</h2>
+        <div id="lines"></div>
+        <label for="name">Name for the order</label>
+        <input type="text" id="name" maxlength="60" autocomplete="name">
+        <button class="primary" id="place">Place order</button>
+        <dl class="sum"><dt>Subtotal</dt><dd id="sub">$0.00</dd></dl>
+        <small class="empty">Tax and the final total are calculated by the kitchen when you place the order.</small>
+      </div>
+      <div class="panel" id="tracker" hidden></div>
+      <div class="panel">
+        <h2>Order by chat</h2>
+        <div id="log" role="log" aria-live="polite"></div>
+        <form id="chatform"><input type="text" id="say" aria-label="Message" placeholder="Two margherita pizzas and a cola" maxlength="300"><button>Send</button></form>
+      </div>
+    </aside>
+  </div>
+</main>
+<main id="kitchen" hidden>
+  <div class="row"><label for="token">Staff token</label><input type="text" id="token" value="staff"><span id="err" role="alert"></span></div>
+  <div id="board"></div>
+</main>
+<div id="toast" role="status"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=c=>'$'+(c/100).toFixed(2);
+const STATUSES=['placed','preparing','ready','delivered'];
+const NEXT={placed:['preparing','Start preparing'],preparing:['ready','Mark ready'],ready:['delivered','Mark delivered']};
+let menu=[],cart={},token='staff',tracked=null,log=[{from:'bot',text:'Hi! Tell me what you would like, for example “two margherita pizzas and a cola”.'}];
+try{tracked=+localStorage.getItem('orderId')||null}catch(e){}
+
+async function api(path,opts={}){
+  const r=await fetch('/api'+path,{...opts,headers:{'Content-Type':'application/json','X-Staff-Token':token}});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||r.statusText);
+  return d;
+}
+let tt;function toast(msg,bad){const t=$('#toast');t.textContent=msg;t.className='show'+(bad?' bad':'');clearTimeout(tt);tt=setTimeout(()=>t.className='',3000)}
+const cartList=()=>Object.entries(cart).map(([id,q])=>({menu_item_id:+id,quantity:q}));
+
+function render(){
+  const cats=[...new Set(menu.map(m=>m.category))];
+  $('#menu').innerHTML=cats.map(c=>`<h2>${esc(c)}</h2>`+menu.filter(m=>m.category===c).map(m=>`
+    <div class="item"><div><h3>${esc(m.name)}</h3><p>${esc(m.description)}</p></div>
+    <div class="buy"><span class="price">${money(m.price_cents)}</span><div class="step">
+      <button data-id="${m.id}" data-d="-1" aria-label="Remove one ${esc(m.name)}">−</button><output>${cart[m.id]||0}</output>
+      <button data-id="${m.id}" data-d="1" aria-label="Add one ${esc(m.name)}">+</button></div></div></div>`).join('')).join('');
+  const rows=menu.filter(m=>cart[m.id]);
+  $('#lines').innerHTML=rows.length?rows.map(m=>`<div class="line"><span>${cart[m.id]}× ${esc(m.name)}</span><span>${money(m.price_cents*cart[m.id])}</span></div>`).join(''):'<p class="empty">Add something from the menu, or ask in the chat.</p>';
+  $('#sub').textContent=money(rows.reduce((s,m)=>s+m.price_cents*cart[m.id],0));
+  $('#place').disabled=!rows.length;
+}
+$('#menu').onclick=e=>{const b=e.target.closest('button[data-id]');if(!b)return;
+  const id=+b.dataset.id,q=Math.max(0,Math.min(20,(cart[id]||0)+ +b.dataset.d));
+  q?cart[id]=q:delete cart[id];render()};
+
+function renderLog(){const l=$('#log');l.innerHTML=log.map(m=>`<div class="msg ${m.from}">${esc(m.text)}</div>`).join('');l.scrollTop=l.scrollHeight}
+$('#chatform').onsubmit=async e=>{e.preventDefault();const text=$('#say').value.trim();if(!text)return;$('#say').value='';
+  log.push({from:'me',text});renderLog();
+  try{const r=await api('/chat',{method:'POST',body:JSON.stringify({message:text,customer_name:$('#name').value,cart:cartList()})});
+    cart=Object.fromEntries(r.cart.map(i=>[i.menu_item_id,i.quantity]));log.push({from:'bot',text:r.reply});
+    if(r.order){setTracked(r.order.id);renderTracker(r.order)}render()}
+  catch(err){log.push({from:'bot',text:err.message})}renderLog()};
+
+$('#place').onclick=async()=>{try{
+  const o=await api('/orders',{method:'POST',body:JSON.stringify({customer_name:$('#name').value,items:cartList()})});
+  cart={};setTracked(o.id);renderTracker(o);render();toast('Order #'+o.id+' placed')}catch(e){toast(e.message,true)}};
+
+function setTracked(id){tracked=id;try{localStorage.setItem('orderId',id)}catch(e){}}
+function renderTracker(o){const el=$('#tracker');el.hidden=false;const cur=STATUSES.indexOf(o.status);
+  el.innerHTML=`<h2>Order #${o.id} for ${esc(o.customer_name)}</h2>`+(o.status==='cancelled'?'<p class="cancelled">This order was cancelled.</p>':
+    `<ol class="track">${STATUSES.map((s,i)=>`<li class="${i<cur?'done':i===cur?'now':''}">${s}</li>`).join('')}</ol>`)+
+    `<ul>${o.items.map(i=>`<li>${i.quantity}× ${esc(i.name)}</li>`).join('')}</ul>
+     <dl class="sum"><dt>Subtotal</dt><dd>${money(o.subtotal_cents)}</dd><dt>Tax</dt><dd>${money(o.tax_cents)}</dd><dt class="tot">Total</dt><dd class="tot">${money(o.total_cents)}</dd></dl>`}
+const pollTracker=()=>tracked&&api('/orders/'+tracked).then(renderTracker).catch(()=>{});
+
+const ticket=o=>`<article class="ticket"><header><b>#${o.id} ${esc(o.customer_name)}</b><time>${new Date(o.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</time></header>
+  <ul>${o.items.map(i=>`<li>${i.quantity}× ${esc(i.name)}</li>`).join('')}</ul>
+  <footer><span>${money(o.total_cents)}</span>
+  ${['placed','preparing'].includes(o.status)?`<button class="ghost" data-id="${o.id}" data-to="cancelled">Cancel</button>`:''}
+  ${NEXT[o.status]?`<button class="go" data-id="${o.id}" data-to="${NEXT[o.status][0]}">${NEXT[o.status][1]}</button>`:''}</footer></article>`;
+async function loadBoard(){if($('#kitchen').hidden)return;
+  try{const os=await api('/orders');
+    $('#board').innerHTML=STATUSES.map(s=>{let l=os.filter(o=>o.status===s);if(s!=='delivered')l.reverse();else l=l.slice(0,8);
+      return `<section class="col"><h2>${s} <span>${l.length}</span></h2>${l.map(ticket).join('')||'<p class="empty">No orders here.</p>'}</section>`}).join('');
+    $('#err').textContent=''}catch(e){$('#err').textContent=e.message}}
+$('#board').onclick=async e=>{const b=e.target.closest('button[data-id]');if(!b)return;
+  try{await api(`/orders/${b.dataset.id}/status`,{method:'PATCH',body:JSON.stringify({status:b.dataset.to})});toast('Order #'+b.dataset.id+' is '+b.dataset.to)}
+  catch(err){toast(err.message,true)}loadBoard()};
+$('#token').oninput=e=>{token=e.target.value;loadBoard()};
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  $('#order').hidden=b.dataset.tab!=='order';$('#kitchen').hidden=b.dataset.tab!=='kitchen';loadBoard()});
+setInterval(()=>{loadBoard();pollTracker()},4000);
+api('/menu').then(m=>{menu=m;render()}).catch(e=>toast(e.message,true));
+renderLog();pollTracker();
+</script>
+</body>
+</html>
